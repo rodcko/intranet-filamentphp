@@ -24,7 +24,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
     protected static ?string $navigationLabel = 'Employees';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = 'Employee Management';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -42,6 +44,7 @@ class UserResource extends Resource
                     ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
+                    ->hiddenOn('edit')
                     ->required(),
                     ]),
 
@@ -65,6 +68,10 @@ class UserResource extends Resource
                             ->pluck('name','id'))
                         ->searchable()
                         ->preload()
+                        ->live()
+                        ->afterStateUpdated(function (Set $set) {
+                            $set('city_id',null);
+                        } )                        
                         ->required(),   
                         Forms\Components\Select::make('city_id')
                         ->options(fn (Get $get): Collection => City::query()
@@ -72,7 +79,11 @@ class UserResource extends Resource
                             ->pluck('name','id'))                        
                         ->searchable()
                         ->preload()
-                        ->required(),                                             
+                        ->required(),
+                        Forms\Components\TextInput::make('address')
+                        ->required(),
+                        Forms\Components\TextInput::make('postal_code')
+                        ->required(),                                                                                                      
                     ])
             ]);
     }
@@ -85,9 +96,16 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('address')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('postal_code')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
